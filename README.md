@@ -6,7 +6,7 @@ Develop a system in Go that receives a ZIP code, identifies the city and returns
 
 Based on the known scenario "Temperature system by ZIP code" referred to as Service B, a new project will be included, referred to as Service A.
 
-#### Service A Requirements - Input Service
+#### Service A - Input Service
 - The system should receive a 8-digits input via POST, using the schema: `{ "cep": "31275000" }`
 - The system should validate whether the input is valid (contains 8 digits) and is a STRING
 - If valid, it will be forwarded to Service B via HTTP
@@ -14,7 +14,7 @@ Based on the known scenario "Temperature system by ZIP code" referred to as Serv
 - HTTP Code: 422
 - Message: invalid zipcode
 
-#### Service A Requirements - Temperature by postal code Service
+#### Service B - Temperature by postal code Service
 Receive a brazilian postal code (usually called CEP) and return the temperature on that location in Celsius, Fahrenheit and Kelvin.
 - Postal code to be valid must be only numbers, 8 digits
 - If a postal code is invalid should return status code 422 with error "invalid postal code"
