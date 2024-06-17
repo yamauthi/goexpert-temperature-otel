@@ -1,0 +1,76 @@
+version: '3'
+services:
+  jaeger-all-in-one:
+    image: jaegertracing/all-in-one:latest
+    restart: always
+    ports:
+      - "16686:16686"
+      - "14268"
+      - "14250"
+  
+  zipkin-all-in-one:
+    image: openzipkin/zipkin:latest
+    restart: always
+    ports:
+      - "9411:9411"
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    restart: always
+    volumes:
+      - ./.docker/prometheus.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    restart: always
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./.docker/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "1888:1888"   # pprof extension
+      - "8888:8888"   # Prometheus metrics exposed by the collector
+      - "8889:8889"   # Prometheus exporter metrics
+      - "13133:13133" # health_check extension
+      - "4317:4317"   # OTLP gRPC receiver
+      - "55679:55679" # zpages extension
+
+  input_service:
+    container_name: input_service
+    build:
+      context: .
+      dockerfile: input.dockerfile
+    environment:
+      - SERVICE_NAME=input_service
+      - TEMPERATURE_SERVICE_URL=http://temperature_service:8081/temperature
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+      - WEBSERVER_URL=0.0.0.0:8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - jaeger-all-in-one
+      - zipkin-all-in-one
+      - prometheus
+      - otel-collector
+
+  temperature_service:
+    container_name: temperature_service
+    build:
+      context: .
+      dockerfile: temperature.dockerfile
+    environment:
+      - SERVICE_NAME=temperature_service
+      - VIACEP_API_URL=http://viacep.com.br/ws
+      - WEATHER_API_KEY=xxxxxxxYOUR_API_KEYxxxxxxxx
+      - WEATHER_API_URL=http://api.weatherapi.com/v1/current.json
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+      - WEBSERVER_URL=0.0.0.0:8081
+    ports:
+      - "8081:8081"
+    depends_on:
+      - jaeger-all-in-one
+      - zipkin-all-in-one
+      - prometheus
+      - otel-collector
