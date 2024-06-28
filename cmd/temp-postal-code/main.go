@@ -29,7 +29,7 @@ func main() {
 	defer cancel()
 
 	// otel provider
-	shutdown, err := observability.InitOtelProvider(context.Background(), conf.ServiceName, conf.OtelEporterEndpoint)
+	shutdown, err := observability.InitOtelProvider(context.Background(), conf.ServiceName, conf.OtelExporterEndpoint)
 	if err != nil {
 		log.Fatal(err)
 	}
